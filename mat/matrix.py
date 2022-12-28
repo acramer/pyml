@@ -101,19 +101,31 @@ class Mat:
 
     def __gt__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x>y) for x,y in zip(self.mat,m)])
+        if isinstance(self.mat[0], Mat):
+            return Mat([x>y for x,y in zip(self.mat,m)])
+        else:
+            return Mat([int(x>y) for x,y in zip(self.mat,m)])
 
     def __ge__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x>=y) for x,y in zip(self.mat,m)])
+        if isinstance(self.mat[0], Mat):
+            return Mat([x>=y for x,y in zip(self.mat,m)])
+        else:
+            return Mat([int(x>=y) for x,y in zip(self.mat,m)])
 
     def __lt__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x<y) for x,y in zip(self.mat,m)])
+        if isinstance(self.mat[0], Mat):
+            return Mat([x<y for x,y in zip(self.mat,m)])
+        else:
+            return Mat([int(x<y) for x,y in zip(self.mat,m)])
 
     def __le__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x<=y) for x,y in zip(self.mat,m)])
+        if isinstance(self.mat[0], Mat):
+            return Mat([x<=y for x,y in zip(self.mat,m)])
+        else:
+            return Mat([int(x<=y) for x,y in zip(self.mat,m)])
 
     def __eq__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
@@ -124,28 +136,41 @@ class Mat:
 
     def __ne__(self, m):
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x!=y) for x,y in zip(self.mat,m)])
+        if isinstance(self.mat[0], Mat):
+            return Mat([x!=y for x,y in zip(self.mat,m)])
+        else:
+            return Mat([int(x!=y) for x,y in zip(self.mat,m)])
 
     def __add__(self, m):
         #TODO: factor of shape?
         assert self.shape == m.shape, 'Matrix shapes must match'
-        Mat([int(x+y) for x,y in zip(self.mat,m)])
+        return Mat([x+y for x,y in zip(self.mat,m)])
 
     def __sub__(self, m):
-        assert(False, 'Not Implemented')
+        #TODO: factor of shape?
+        assert self.shape == m.shape, 'Matrix shapes must match'
+        return Mat([x-y for x,y in zip(self.mat,m)])
 
     def __mul__(self, m):
-        assert(False, 'Not Implemented')
+        #TODO: factor of shape?
+        if isinstance(m,Mat):
+            assert self.shape == m.shape, 'Matrix shapes must match'
+            return Mat([x*y for x,y in zip(self.mat,m)])
+        return Mat([x*m for x in self.mat])
 
     def __truediv__(self, m):
         assert(False, 'Not Implemented')
+        return 0
 
     def __floordiv__(self, m):
         assert(False, 'Not Implemented')
+        return 0
 
     def __mod__(self, m):
         assert(False, 'Not Implemented')
+        return 0
 
     def __pow__(self, m):
         assert(False, 'Not Implemented')
+        return 0
 
