@@ -2,19 +2,32 @@ import unittest
 from mat import *
 
 class BaselineTest(unittest.TestCase):
+    def test_creation_equality(self):
+        a = Mat([
+                [0,0],
+                [0,0],
+                [0,0],
+            ])
+        b = Mat(3,2)
+        self.assertTrue((a==b).all())
+
     def test_creation_shape(self):
-        #TODO: implement test case?
+        #TODO: How to test?
         a = Mat(1,2,3,4)
 
     def test_creation_object(self):
-        #TODO: implement test case?
+        #TODO: How to test?
         a = Mat([
                 [0,1,2],
                 [3,4,5],
                 [6,7,8],
             ])
+
+    def test_creation_shape_random(self):
+        #TODO: implement test case?
+        pass
             
-    def test_2d_get_slice(self):
+    def test_get_slice_2d(self):
         a = Mat([
             [1,2,3],
             [4,5,6],
@@ -27,7 +40,7 @@ class BaselineTest(unittest.TestCase):
         ])
         self.assertTrue((b==c).all())
 
-    def test_2d_get_index(self):
+    def test_get_index_2d(self):
         a = Mat([
             [1,2,3],
             [4,5,6],
@@ -39,7 +52,7 @@ class BaselineTest(unittest.TestCase):
         ])
         self.assertTrue((b==c).all())
 
-    def test_2d_set_slice(self):
+    def test_set_slice_2d(self):
         a = Mat([
             [1,0,0],
             [4,0,0],
@@ -57,7 +70,7 @@ class BaselineTest(unittest.TestCase):
         a[:2,1:] = b
         self.assertTrue((a==c).all())
 
-    def test_2d_set_index(self):
+    def test_set_index_2d(self):
         a = Mat([
             [1,2,0],
             [4,5,6],
@@ -72,7 +85,7 @@ class BaselineTest(unittest.TestCase):
         a[0,2] = b #TODO: make case for int
         self.assertTrue((b==c).all())
             
-    def test_3d_get_slice(self):
+    def test_get_slice_3d(self):
         a = Mat([
             [[1,2,3],
              [4,5,6],
@@ -94,7 +107,7 @@ class BaselineTest(unittest.TestCase):
         ])
         self.assertTrue((b==c).all())
 
-    def test_3d_get_index(self):
+    def test_get_index_3d(self):
         a = Mat([
             [[1,2,3],
              [4,5,6],
@@ -109,7 +122,7 @@ class BaselineTest(unittest.TestCase):
         c = Mat([[[13]]])
         self.assertTrue((b==c).all())
 
-    def test_3d_set_slice(self):
+    def test_set_slice_3d(self):
         a = Mat([
             [[1,0,0],
              [4,0,0],
@@ -142,7 +155,7 @@ class BaselineTest(unittest.TestCase):
         a[:,:2,1:] = b
         self.assertTrue((a==c).all())
 
-    def test_3d_set_index(self):
+    def test_set_index_3d(self):
         a = Mat([
             [[1,2,3],
              [4,5,6],
@@ -167,8 +180,4 @@ class BaselineTest(unittest.TestCase):
         ])
         a[1,0,2] = b #TODO: make case for int
         self.assertTrue((b==c).all())
-
-
-if __name__ == '__main__':
-    unittest.main()
 
