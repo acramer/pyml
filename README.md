@@ -8,6 +8,5 @@ Goals:
     - Handling install, uninstall and hosting
     - Version requirements
     - Sharing/designing dev env
-    - Exploring 
     - Other expected files for packages
 - Exploring low level implementation of matix and ML concepts
