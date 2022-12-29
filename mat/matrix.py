@@ -97,12 +97,16 @@ class Mat:
         assert self.valid_indices(indices), 'Invalid Indices'
         #TODO: assert M has valid shape.  Function to generate shape from indices?
         if len(indices) > 1:
-            for m, n in zip(self.mat[indices[0]], M.mat):
-                m[indices[1:]] = n
-        elif isinstance(indices[0],slice):
-            self.mat[indices[0]] = M.mat[:]
+            if isinstance(indices[0],slice):
+                for m, n in zip(self.mat[indices[0]], M.mat):
+                    m[indices[1:]] = n
+            else:
+                self.mat[indices[0]][indices[1:]] = M.mat[0]
         else:
-            self.mat[indices[0]] = M.mat[0]
+            if isinstance(indices[0],slice):
+                self.mat[indices[0]] = M.mat[:]
+            else:
+                self.mat[indices[0]] = M.mat[0]
 
     def __str__(self, inner=False):
         pad = '\n' if not inner else ''

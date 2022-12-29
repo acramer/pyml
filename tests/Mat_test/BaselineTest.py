@@ -83,7 +83,7 @@ class BaselineTest(unittest.TestCase):
             [7,8,9],
         ])
         a[0,2] = b #TODO: make case for int
-        self.assertTrue((b==c).all())
+        self.assertTrue((a==c).all())
             
     def test_get_slice_3d(self):
         a = Mat([
@@ -179,5 +179,5 @@ class BaselineTest(unittest.TestCase):
             ],
         ])
         a[1,0,2] = b #TODO: make case for int
-        self.assertTrue((b==c).all())
+        self.assertTrue((a==c).all())
 
