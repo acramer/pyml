@@ -2,6 +2,23 @@ import unittest
 from mat import *
 
 class BroadcastingTest(unittest.TestCase):
+    def test_broadcast(self):
+        a = Mat(3,3,3)
+        b = a.broadcast_if_needed(Mat(3,3,1))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(Mat(3,1,3))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(Mat(1,3,1))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(Mat(1,3,3))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(Mat(3,3))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(Mat(3))
+        self.assertTrue((a==b).all())
+        b = a.broadcast_if_needed(0)
+        self.assertTrue((a==b).all())
+
     def test_addition_same_shape_1d(self):
         a = Mat([1])
         b = Mat([2])

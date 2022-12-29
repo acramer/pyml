@@ -1,4 +1,5 @@
 from copy import deepcopy
+from operator import *
 
 """
 TODO: Implement list backed Mat object
@@ -8,27 +9,54 @@ TODO: Implement list backed Mat object
 """
 
 class Mat:
-    #TODO: matrix ops: inversion, transpose, range
+    #TODO: matrix ops: inversion, transpose, range, ones, squeeze, unsqueeze, reshape, repeat
     def __init__(self, firstElement, *args, **kwargs):
         if isinstance(firstElement, list):
-            assert self.validMatrix(firstElement), 'Invalid Matrix'
-            self.setFromList(firstElement)
+            assert self.valid_matrix(firstElement), 'Invalid Matrix'
+            self.set_from_list(firstElement)
         else:
-            assert self.validShape(firstElement, *args), 'Invalid Shape'
-            self.generateMat(firstElement, *args, **kwargs)
+            assert self.valid_shape(firstElement, *args), 'Invalid Shape'
+            self.generate_mat(firstElement, *args, **kwargs)
 
-    def validMatrix(self, m):
+    def valid_matrix(self, m):
         #TODO: implement
         return True
 
-    def validShape(self, *shape):
+    def valid_shape(self, *shape):
         #TODO: implement
         return True
 
-    def validIndices(self, indices):
+    def valid_indices(self, indices):
         return all([isinstance(i, slice) or (i >= 0 and i < s) for i, s in zip(indices, self.shape)])
 
-    def setFromList(self, m):
+    def broadcast_if_needed(self, m):
+        assert not isinstance(m, list)
+        if not isinstance(m, Mat):
+            m = Mat([m])
+
+        broadcast_failure_string  = 'Unnable to format shape of {} to {}'.format(m.shape, self.shape)
+
+        # Unsqeeze to number of dims
+        for _ in range(len(self.shape)-len(m.shape)):
+            m = Mat([m])
+
+        if self.shape == m.shape: return m
+        assert all([x == y or y == 1 for x,y in zip(self.shape, m.shape)]), broadcast_failure_string
+
+        def broadcast(to_shape, n):
+            from_shape = n.shape
+            if to_shape == from_shape:
+                return n
+            if to_shape[0] == from_shape[0]:
+                return Mat([broadcast(to_shape[1:], o) for o in n])
+            if len(from_shape) == 1:
+                return Mat([n.mat[0]]*to_shape[0])
+            n = broadcast(to_shape[1:], n.mat[0])
+            return Mat([deepcopy(n) for _ in range(to_shape[0])])
+
+        return broadcast(self.shape, m)
+
+    def set_from_list(self, m):
         self.mat = []
         if isinstance(m[0], list) or isinstance(m[0], Mat):
             for n in m:
@@ -42,7 +70,7 @@ class Mat:
             self.rank = 1
             self.shape = (len(m), )
 
-    def generateMat(self, *shape, random=False, **kwargs):
+    def generate_mat(self, *shape, random=False, **kwargs):
         #TODO: random
         self.shape = shape
         if len(shape) == 1:
@@ -53,7 +81,9 @@ class Mat:
             self.rank = self.mat[0].rank + 1
 
     def __getitem__(self, indices):
-        assert self.validIndices(indices), 'Invalid Indices'
+        if not isinstance(indices, tuple):
+            indices = [indices]
+        assert self.valid_indices(indices), 'Invalid Indices'
         index = indices[0]
         if not isinstance(index,slice):
             index = slice(index,index+1) 
@@ -62,7 +92,9 @@ class Mat:
         return Mat(self.mat[index])
 
     def __setitem__(self, indices, M):
-        assert self.validIndices(indices), 'Invalid Indices'
+        if not isinstance(indices, tuple):
+            indices = [indices]
+        assert self.valid_indices(indices), 'Invalid Indices'
         #TODO: assert M has valid shape.  Function to generate shape from indices?
         if len(indices) > 1:
             for m, n in zip(self.mat[indices[0]], M.mat):
@@ -99,78 +131,50 @@ class Mat:
         else:
             return any(self.mat)
 
-    def __gt__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x>y for x,y in zip(self.mat,m)])
+    #TODO: should this be func? privacy?
+    def broadcast_op(self, m, op, bool_op=False):
+        m = self.broadcast_if_needed(m)
+        if not bool_op or isinstance(self.mat[0], Mat):
+            return Mat([op(x,y) for x,y in zip(self.mat,m)])
         else:
-            return Mat([int(x>y) for x,y in zip(self.mat,m)])
+            return Mat([int(op(x,y)) for x,y in zip(self.mat,m)])
+
+    def __gt__(self, m):
+        return self.broadcast_op(m, gt, True)
 
     def __ge__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x>=y for x,y in zip(self.mat,m)])
-        else:
-            return Mat([int(x>=y) for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, ge, True)
 
     def __lt__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x<y for x,y in zip(self.mat,m)])
-        else:
-            return Mat([int(x<y) for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, lt, True)
 
     def __le__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x<=y for x,y in zip(self.mat,m)])
-        else:
-            return Mat([int(x<=y) for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, le, True)
 
     def __eq__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x==y for x,y in zip(self.mat,m)])
-        else:
-            return Mat([int(x==y) for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, eq, True)
 
     def __ne__(self, m):
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        if isinstance(self.mat[0], Mat):
-            return Mat([x!=y for x,y in zip(self.mat,m)])
-        else:
-            return Mat([int(x!=y) for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, ne, True)
 
     def __add__(self, m):
-        #TODO: factor of shape?
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        return Mat([x+y for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, add, False)
 
     def __sub__(self, m):
-        #TODO: factor of shape?
-        assert self.shape == m.shape, 'Matrix shapes must match'
-        return Mat([x-y for x,y in zip(self.mat,m)])
+        return self.broadcast_op(m, sub, False)
 
     def __mul__(self, m):
-        #TODO: factor of shape?
-        if isinstance(m,Mat):
-            assert self.shape == m.shape, 'Matrix shapes must match'
-            return Mat([x*y for x,y in zip(self.mat,m)])
-        return Mat([x*m for x in self.mat])
+        return self.broadcast_op(m, mul, False)
 
     def __truediv__(self, m):
-        assert(False, 'Not Implemented')
-        return 0
+        return self.broadcast_op(m, truediv, False)
 
     def __floordiv__(self, m):
-        assert(False, 'Not Implemented')
-        return 0
+        return self.broadcast_op(m, floordiv, False)
 
     def __mod__(self, m):
-        assert(False, 'Not Implemented')
-        return 0
+        return self.broadcast_op(m, mod, False)
 
     def __pow__(self, m):
-        assert(False, 'Not Implemented')
-        return 0
+        return self.broadcast_op(m, pow, False)
 
