@@ -85,37 +85,42 @@ class Mat:
             indices = [indices]
         assert self.valid_indices(indices), 'Invalid Indices'
         index = indices[0]
-        if not isinstance(index,slice):
-            index = slice(index,index+1) 
         if len(indices) > 1:
-            return Mat([m[indices[1:]] for m in self.mat[index]])
-        return Mat(self.mat[index])
+            if isinstance(index,slice):
+                return Mat([m[indices[1:]] for m in self.mat[index]])
+            return self.mat[index][indices[1:]]
+        if isinstance(index,slice):
+            return Mat(self.mat[index])
+        return self.mat[index]
 
     def __setitem__(self, indices, M):
         if not isinstance(indices, tuple):
             indices = [indices]
         assert self.valid_indices(indices), 'Invalid Indices'
         #TODO: assert M has valid shape.  Function to generate shape from indices?
-        if len(indices) > 1:
-            if isinstance(indices[0],slice):
-                for m, n in zip(self.mat[indices[0]], M.mat):
+        index = indices[0]
+
+        if isinstance(index,slice):
+            if len(indices) > 1:
+                for m, n in zip(self.mat[index], M):
                     m[indices[1:]] = n
             else:
-                self.mat[indices[0]][indices[1:]] = M.mat[0]
+                self.mat[index] = M
         else:
-            if isinstance(indices[0],slice):
-                self.mat[indices[0]] = M.mat[:]
+            if len(indices) > 1:
+                self.mat[index][indices[1:]] = M
             else:
-                self.mat[indices[0]] = M.mat[0]
+                self.mat[index] = M
 
     def __str__(self, inner=False):
         pad = '\n' if not inner else ''
-        rankstr = '\nRank '+str(self.rank) if not inner else ''
+        header = 'Mat{}'.format(self.shape) if not inner else ''
+        header += '\n' if not inner and self.rank == 1 else ''
         if isinstance(self.mat[0], Mat):
             ret = pad+'['+',\n '.join([m.__str__(True) for m in self.mat])+']'+pad
         else:
             ret = str(self.mat)
-        return rankstr+ret
+        return header+ret
 
     def __len__(self):
         return len(self.mat)
