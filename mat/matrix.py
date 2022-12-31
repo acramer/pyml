@@ -139,6 +139,22 @@ class Mat:
             return any([m.any() for m in self.mat])
         else:
             return any(self.mat)
+    
+    def sum(self,dim=None):
+        if self.rank == 1:
+            return sum(self.mat)
+        if dim is None:
+            return sum(m.sum() for m in self.mat)
+        # if dim == 0:
+        #     return sum(m for m in self.mat)
+        assert dim >= 0 and dim < self.rank
+        sum_slice = [slice(None) for _ in range(self.rank)]
+        sum_slice[dim] = 0
+        ret = self.__getitem__(tuple(sum_slice))
+        for i in range(1, self.shape[dim]):
+            sum_slice[dim] = i
+            ret += self.__getitem__(tuple(sum_slice))
+        return ret
 
     #TODO: should this be func? privacy?
     def broadcast_op(self, m, op, bool_op=False):
