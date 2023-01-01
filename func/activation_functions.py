@@ -3,9 +3,12 @@ from math import exp, tanh
 # TODO: Add gradient computation and tracking
 # TODO: Add simple functions
 
-class sigmoid:
-    def __call__(self, x):
-        return 1/(1+exp(-x))
+def sigmoid(x):
+    return 1/(1+exp(-x))
+
+# class sigmoid:
+#     def __call__(self, x):
+#         return 1/(1+exp(-x))
     
 class tanh:
     def __call__(self, x):
@@ -26,10 +29,9 @@ class swish:
         return max(0, x)
 
 __all__ = [
-    'cross_entropy_loss',
-    'binary_cross_entropy_loss',
-    'l1',
-    'l2',
-    'hinge_loss',
-    'hubber_loss',
+    'sigmoid',
+    'tanh',
+    'relu',
+    'leaky_relu',
+    'swish',
 ]

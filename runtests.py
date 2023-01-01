@@ -4,14 +4,13 @@ import unittest
 
 if __name__ == '__main__':
     # print(''.join(['+']*100))
+
     # import torch 
     # from torch import nn
 
     # x = torch.Tensor([
     #     [1,0.1],
-    # ])
-    # y = torch.Tensor([
-    #     [1],
+    #     [2,0.2],
     # ])
 
     # l0 = nn.Linear(2,2)
@@ -35,6 +34,7 @@ if __name__ == '__main__':
     # 
     # x = np.array([
     #     [1,0.1],
+    #     [2,0.2],
     # ])
     # y = np.array([
     #     [1],
@@ -57,10 +57,10 @@ if __name__ == '__main__':
 
     # x = Mat([
     #     [1,0.1],
+    #     [2,0.2],
     # ])
-    # y = Mat([
-    #     [1],
-    # ])
+
+    # x = Mat([1,0.1])
 
     # w0 = Mat([
     #     [1.0,2.0],
@@ -77,6 +77,23 @@ if __name__ == '__main__':
     # print('\np:')
     # print(w0*x)
     # print((w0*x).sum(1)+b0)
+    # from copy import deepcopy
+
+    # x = Mat([
+    #     [1,0.1],
+    #     [2,0.2],
+    # ])
+    # w0 = Mat([
+    #     deepcopy(w0),
+    #     deepcopy(w0) # Repeat by number of batches
+    # ])
+    # # Unsqueeze by 1st dim? x = x[:,None,:]
+    # x = Mat([
+    #     [[1,0.1]],
+    #     [[2,0.2]],
+    # ])
+    # print((w0*x).sum(2)+b0)
 
     # print(''.join(['+']*100))
+
     unittest.main()

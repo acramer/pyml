@@ -29,32 +29,45 @@ class Mat:
     def valid_indices(self, indices):
         return all([isinstance(i, slice) or (i >= 0 and i < s) for i, s in zip(indices, self.shape)])
 
-    def broadcast_if_needed(self, m):
+    def broadcast_if_needed(self, m, n):
         assert not isinstance(m, list)
+        assert not isinstance(n, list)
+
         if not isinstance(m, Mat):
             m = Mat([m])
+        if not isinstance(n, Mat):
+            n = Mat([n])
 
-        broadcast_failure_string  = 'Unnable to format shape of {} to {}'.format(m.shape, self.shape)
+        flipped = False
+        if n.rank > m.rank or (n.rank == m.rank and sum(n.shape) > sum(m.shape)):
+            m, n = n, m
+            flipped = True
+
+        broadcast_failure_string  = 'Unnable to format shape of {} to {}'.format(n.shape, m.shape)
 
         # Unsqeeze to number of dims
-        for _ in range(len(self.shape)-len(m.shape)):
-            m = Mat([m])
+        for _ in range(m.rank-n.rank):
+            n = Mat([n])
 
-        if self.shape == m.shape: return m
+        if m.shape == n.shape:
+            if flipped: m, n = n, m
+            return m, n
         assert all([x == y or y == 1 for x,y in zip(self.shape, m.shape)]), broadcast_failure_string
 
-        def broadcast(to_shape, n):
-            from_shape = n.shape
+        def broadcast(to_shape, o):
+            from_shape = o.shape
             if to_shape == from_shape:
-                return n
+                return o
             if to_shape[0] == from_shape[0]:
-                return Mat([broadcast(to_shape[1:], o) for o in n])
+                return Mat([broadcast(to_shape[1:], p) for p in o])
             if len(from_shape) == 1:
-                return Mat([n.mat[0]]*to_shape[0])
-            n = broadcast(to_shape[1:], n.mat[0])
-            return Mat([deepcopy(n) for _ in range(to_shape[0])])
+                return Mat([o.mat[0]]*to_shape[0])
+            o = broadcast(to_shape[1:], o.mat[0])
+            return Mat([deepcopy(o) for _ in range(to_shape[0])])
 
-        return broadcast(self.shape, m)
+        n = broadcast(m.shape, n) 
+        if flipped: m, n = n, m
+        return m, n
 
     def set_from_list(self, m):
         self.mat = []
@@ -139,6 +152,12 @@ class Mat:
             return any([m.any() for m in self.mat])
         else:
             return any(self.mat)
+
+    def abs(self):
+        if isinstance(self.mat[0], Mat):
+            return Mat([m.abs() for m in self.mat])
+        else:
+            return Mat([abs(m) for m in self.mat])
     
     def sum(self,dim=None):
         if self.rank == 1:
@@ -157,12 +176,12 @@ class Mat:
         return ret
 
     #TODO: should this be func? privacy?
-    def broadcast_op(self, m, op, bool_op=False):
-        m = self.broadcast_if_needed(m)
-        if not bool_op or isinstance(self.mat[0], Mat):
-            return Mat([op(x,y) for x,y in zip(self.mat,m)])
+    def broadcast_op(self, n, op, bool_op=False):
+        m, n = self.broadcast_if_needed(self, n)
+        if not bool_op or m.rank > 1:
+            return Mat([op(x,y) for x,y in zip(m,n)])
         else:
-            return Mat([int(op(x,y)) for x,y in zip(self.mat,m)])
+            return Mat([int(op(x,y)) for x,y in zip(m,n)])
 
     def __gt__(self, m):
         return self.broadcast_op(m, gt, True)
@@ -202,4 +221,7 @@ class Mat:
 
     def __pow__(self, m):
         return self.broadcast_op(m, pow, False)
+
+    def __neg__(self):
+        return Mat([-m for m in self.mat])
 
