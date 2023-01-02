@@ -1,5 +1,6 @@
 from copy import deepcopy
 from operator import *
+from math import exp
 
 """
 TODO: Implement list backed Mat object
@@ -52,7 +53,7 @@ class Mat:
         if m.shape == n.shape:
             if flipped: m, n = n, m
             return m, n
-        assert all([x == y or y == 1 for x,y in zip(self.shape, m.shape)]), broadcast_failure_string
+        assert all([x == y or y == 1 for x,y in zip(m.shape, n.shape)]), broadcast_failure_string
 
         def broadcast(to_shape, o):
             from_shape = o.shape
@@ -158,14 +159,18 @@ class Mat:
             return Mat([m.abs() for m in self.mat])
         else:
             return Mat([abs(m) for m in self.mat])
+
+    def exp(self):
+        if isinstance(self.mat[0], Mat):
+            return Mat([m.exp() for m in self.mat])
+        else:
+            return Mat([exp(m) for m in self.mat])
     
     def sum(self,dim=None):
         if self.rank == 1:
             return sum(self.mat)
         if dim is None:
             return sum(m.sum() for m in self.mat)
-        # if dim == 0:
-        #     return sum(m for m in self.mat)
         assert dim >= 0 and dim < self.rank
         sum_slice = [slice(None) for _ in range(self.rank)]
         sum_slice[dim] = 0
@@ -221,6 +226,71 @@ class Mat:
 
     def __pow__(self, m):
         return self.broadcast_op(m, pow, False)
+
+    def __rgt__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m>self
+
+    def __rge__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m>=self
+
+    def __rlt__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m<self
+
+    def __rle__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m<=self
+
+    def __req__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m==self
+
+    def __rne__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m!=self
+
+    def __radd__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m+self
+
+    def __rsub__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m-self
+
+    def __rmul__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m*self
+
+    def __rtruediv__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m/self
+
+    def __rfloordiv__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m//self
+
+    def __rmod__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m%self
+
+    def __rpow__(self, m):
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        return m**self
 
     def __neg__(self):
         return Mat([-m for m in self.mat])

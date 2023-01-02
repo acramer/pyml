@@ -4,7 +4,7 @@ from math import exp, tanh
 # TODO: Add simple functions
 
 def sigmoid(x):
-    return 1/(1+exp(-x))
+    return 1/(1+(-x).exp())
 
 # class sigmoid:
 #     def __call__(self, x):

@@ -26,7 +26,7 @@ class Mat_FeedforwardTest(unittest.TestCase):
 
     def test_full(self):
         x = Mat([0.05,0.10])
-        y = Mat([0.01,0.99])
+        y = Mat([0.7513507,0.772928465])
         w0 = Mat([
             [0.15,0.20],
             [0.25,0.30],
@@ -40,6 +40,7 @@ class Mat_FeedforwardTest(unittest.TestCase):
         b1 = Mat([0.60,0.60])
 
         x = (w0*x).sum(1)+b0
+        x = sigmoid(x)
         x = (w1*x).sum(1)+b1
         p = sigmoid(x)
         self.assertMatEqual(p,y)
