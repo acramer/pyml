@@ -180,6 +180,20 @@ class Mat:
             ret += self.__getitem__(tuple(sum_slice))
         return ret
 
+    def mean(self,dim=None):
+        if self.rank == 1:
+            return sum(self.mat)/len(self.mat)
+        if dim is None:
+            return sum(m.mean() for m in self.mat)/len(self.mat)
+        assert dim >= 0 and dim < self.rank
+        mean_slice = [slice(None) for _ in range(self.rank)]
+        mean_slice[dim] = 0
+        ret = self.__getitem__(tuple(mean_slice))
+        for i in range(1, self.shape[dim]):
+            mean_slice[dim] = i
+            ret += self.__getitem__(tuple(mean_slice))
+        return ret/self.shape[dim]
+
     #TODO: should this be func? privacy?
     def broadcast_op(self, n, op, bool_op=False):
         m, n = self.broadcast_if_needed(self, n)
@@ -187,6 +201,44 @@ class Mat:
             return Mat([op(x,y) for x,y in zip(m,n)])
         else:
             return Mat([int(op(x,y)) for x,y in zip(m,n)])
+
+    def flatten(self):
+        #TODO: add tests
+        if self.rank == 1:
+            return self
+
+        ret = []
+        for m in self.mat:
+            ret+=m.flatten().mat
+        return Mat(ret)
+
+    def reshape(self, *shape):
+        #TODO: add tests
+        #TODO: check shape is valid
+        ret = self.flatten().mat
+        # print(ret)
+        temp = []
+        for s in reversed(shape):
+            # print('s',s)
+            for _ in range(len(ret)//s):
+                # print('',ret[:s])
+                temp += [Mat(ret[:s])]
+                ret = ret[s:]
+                # print('temp',temp)
+                # print('ret',ret)
+            ret = temp
+            temp = []
+        return ret[0]
+
+    def transpose(self):
+        #TODO: add tests
+        #TODO: check valid
+        return Mat([self[:,i] for i in range(self.shape[1])])
+
+    def repeat(self, n):
+        #TODO: add tests
+        #TODO: check n is valid
+        return Mat([deepcopy(self) for _ in range(n)])
 
     def __gt__(self, m):
         return self.broadcast_op(m, gt, True)
