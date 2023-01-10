@@ -1,17 +1,31 @@
 from copy import deepcopy
-from operator import *
-from math import exp
 from functools import reduce
-
-"""
-TODO: Implement list backed Mat object
-    - Constructors generate object iteratively
-    - Get method creates Mat object at finish
-    - Comparison methods creates Mat object at finish
-"""
+from math import exp
+from operator import *
 
 class Mat:
-    #TODO: matrix ops: inversion, transpose, range, ones, squeeze, unsqueeze, reshape, repeat
+    '''
+    TODO:
+        - Change underlying matrix representation to flattened list (RECALL-0)
+        - Constructors generate object iteratively
+        - Get method creates Mat object at finish
+        - Comparison methods creates Mat object at finish
+    Refactor:
+        - Decide on nomenclature
+            - Dim/Axis
+            - Rank/Power
+        - Generate Rank from shape or remove rank altogether
+        - (?) Generate Power from shape and make accessible
+    '''
+    #MARK: Constructors
+    '''
+    Refactor Plan
+        - Restrict __init__ constructor to only take matrix or None
+        - Implemnt construction for arg == None
+        - Remove *args and **kwargs from __init__
+        - Move shape constructors here and make static
+        - Move self.set_from_list into __init__
+    '''
     def __init__(self, firstElement, *args, **kwargs):
         if isinstance(firstElement, list):
             assert self.valid_matrix(firstElement), 'Invalid Matrix'
@@ -23,57 +37,6 @@ class Mat:
             self.mat = M.mat
             self.shape = M.shape
             self.rank = M.rank
-
-    def valid_matrix(self, m):
-        #TODO: implement
-        return True
-
-    def valid_shape(self, *shape):
-        #TODO: implement
-        return True
-
-    def valid_indices(self, indices):
-        return all([isinstance(i, slice) or (i >= 0 and i < s) for i, s in zip(indices, self.shape)])
-
-    def broadcast_if_needed(self, m, n):
-        assert not isinstance(m, list)
-        assert not isinstance(n, list)
-
-        if not isinstance(m, Mat):
-            m = Mat([m])
-        if not isinstance(n, Mat):
-            n = Mat([n])
-
-        flipped = False
-        if n.rank > m.rank or (n.rank == m.rank and sum(n.shape) > sum(m.shape)):
-            m, n = n, m
-            flipped = True
-
-        broadcast_failure_string  = 'Unnable to format shape of {} to {}'.format(n.shape, m.shape)
-
-        # Unsqeeze to number of dims
-        for _ in range(m.rank-n.rank):
-            n = Mat([n])
-
-        if m.shape == n.shape:
-            if flipped: m, n = n, m
-            return m, n
-        assert all([x == y or y == 1 for x,y in zip(m.shape, n.shape)]), broadcast_failure_string
-
-        def broadcast(to_shape, o):
-            from_shape = o.shape
-            if to_shape == from_shape:
-                return o
-            if to_shape[0] == from_shape[0]:
-                return Mat([broadcast(to_shape[1:], p) for p in o])
-            if len(from_shape) == 1:
-                return Mat([o.mat[0]]*to_shape[0])
-            o = broadcast(to_shape[1:], o.mat[0])
-            return Mat([deepcopy(o) for _ in range(to_shape[0])])
-
-        n = broadcast(m.shape, n) 
-        if flipped: m, n = n, m
-        return m, n
 
     def set_from_list(self, m):
         self.mat = []
@@ -88,6 +51,34 @@ class Mat:
             self.mat = m
             self.rank = 1
             self.shape = (len(m), )
+
+
+    #MARK: Validation Methods
+    '''
+    Refactor Plan
+        - Implement
+        - Make constructor validators static
+    '''
+
+    def valid_matrix(self, m):
+        #TODO: implement
+        return True
+
+    def valid_shape(self, *shape):
+        #TODO: implement
+        return True
+
+    def valid_indices(self, indices):
+        return all([isinstance(i, slice) or (i >= 0 and i < s) for i, s in zip(indices, self.shape)])
+
+    #MARK: Iterable Methods
+    '''
+    Future Work
+        - Fix methods related to (RECALL-0)
+            - __getitem__ and __setitem__ massive changes
+            - __iter__ change to a list of Mats with set mat and shape
+    Refactor Plan
+    '''
 
     def __getitem__(self, indices):
         if not isinstance(indices, tuple):
@@ -121,6 +112,20 @@ class Mat:
             else:
                 self.mat[index] = M
 
+    def __len__(self):
+        return len(self.mat)
+
+    def __iter__(self):
+        return iter(self.mat)
+
+    #MARK: Class Methods
+    '''
+    Future Work
+        - Make dims line up 
+        - Make new line more consistent
+        - Add new lines based on depth
+    '''
+    
     def __str__(self, inner=False):
         pad = '\n' if not inner else ''
         header = 'Mat{}'.format(self.shape) if not inner else ''
@@ -131,11 +136,11 @@ class Mat:
             ret = str(self.mat)
         return header+ret
 
-    def __len__(self):
-        return len(self.mat)
-
-    def __iter__(self):
-        return iter(self.mat)
+    #MARK: Matrix Broadcasted Methods
+    '''
+    Refactor Plan
+        - 
+    '''
 
     def all(self):
         if isinstance(self.mat[0], Mat):
@@ -161,6 +166,12 @@ class Mat:
         else:
             return Mat([exp(m) for m in self.mat])
     
+    #MARK: Matrix Reduction Methods
+    '''
+    Refactor Plan
+        - 
+    '''
+
     def sum(self,dim=None):
         if self.rank == 1:
             return sum(self.mat)
@@ -189,16 +200,21 @@ class Mat:
             ret += self.__getitem__(tuple(mean_slice))
         return ret/self.shape[dim]
 
-    #TODO: should this be func? privacy?
-    def broadcast_op(self, n, op, bool_op=False):
-        m, n = self.broadcast_if_needed(self, n)
-        if not bool_op or m.rank > 1:
-            return Mat([op(x,y) for x,y in zip(m,n)])
-        else:
-            return Mat([int(op(x,y)) for x,y in zip(m,n)])
+    #MARK: Matrix Operations
+    '''
+    Future Work:
+        - inverse
+        - squeeze
+        - unsqueeze
+        - transpose tests
+        - reshape tests
+        - repeat tests
+        - change flatten implementation with (RECALL-0)
+    Refactor Plan
+        - 
+    '''
 
     def flatten(self):
-        #TODO: add tests
         if self.rank == 1:
             return self
 
@@ -208,18 +224,19 @@ class Mat:
         return Mat(ret)
 
     def reshape(self, *shape):
-        #TODO: add tests
-        #TODO: check shape is valid
+        has_wildcard = False
         for s in shape:
             #TODO assert s is int
-            #TODO assert only one wildcard (-1)
-            pass
+            if s < 0:
+                assert s == -1, 'Only whole numbers and -1 (wildcard) are allowed for shape input'
+                assert not has_wildcard, 'Only one wildcard per shape input'
+                has_wildcard = True
 
         current_power = reduce(mul, self.shape, 1)
-        new_power = reduce(mul, shape, 1)
-        assert new_power == current_power or (new_power < 0 and abs(new_power) <= current_power and current_power%new_power == 0)
-        if new_power < 0:
-            new_dim = current_power//abs(new_power)
+        new_power = abs(reduce(mul, shape, 1))
+        assert new_power == current_power or (has_wildcard and new_power <= current_power and current_power % new_power == 0)
+        if has_wildcard:
+            new_dim = current_power//new_power
             shape = tuple(s if s>0 else new_dim for s in shape)
 
         ret = self.flatten().mat
@@ -265,6 +282,63 @@ class Mat:
         #TODO: add tests
         #TODO: check n is valid
         return Mat([deepcopy(self) for _ in range(n)])
+
+    #MARK: Broadcasting Operators and Methods
+    '''
+    Refactor Plan
+        - Make right ops into (static?) method (self.right_broadcast_op)
+        - Rename self.broadcast_op to self.left_broadcast_op
+        - Add casting to left ops
+        - Remove Number Broadcasting from left ops
+        - Move unitary op (currently only __neg__) into (static?) method (self.unitary_broadcast_op)
+        - Move broadcast_if_needed into left_broadcast_op(?)
+    '''
+    def broadcast_if_needed(self, m, n):
+        assert not isinstance(m, list)
+        assert not isinstance(n, list)
+
+        if not isinstance(m, Mat):
+            m = Mat([m])
+        if not isinstance(n, Mat):
+            n = Mat([n])
+
+        flipped = False
+        if n.rank > m.rank or (n.rank == m.rank and sum(n.shape) > sum(m.shape)):
+            m, n = n, m
+            flipped = True
+
+        broadcast_failure_string  = 'Unnable to format shape of {} to {}'.format(n.shape, m.shape)
+
+        # Unsqeeze to number of dims
+        for _ in range(m.rank-n.rank):
+            n = Mat([n])
+
+        if m.shape == n.shape:
+            if flipped: m, n = n, m
+            return m, n
+        assert all([x == y or y == 1 for x,y in zip(m.shape, n.shape)]), broadcast_failure_string
+
+        def broadcast(to_shape, o):
+            from_shape = o.shape
+            if to_shape == from_shape:
+                return o
+            if to_shape[0] == from_shape[0]:
+                return Mat([broadcast(to_shape[1:], p) for p in o])
+            if len(from_shape) == 1:
+                return Mat([o.mat[0]]*to_shape[0])
+            o = broadcast(to_shape[1:], o.mat[0])
+            return Mat([deepcopy(o) for _ in range(to_shape[0])])
+
+        n = broadcast(m.shape, n) 
+        if flipped: m, n = n, m
+        return m, n
+
+    def broadcast_op(self, n, op, bool_op=False):
+        m, n = self.broadcast_if_needed(self, n)
+        if not bool_op or m.rank > 1:
+            return Mat([op(x,y) for x,y in zip(m,n)])
+        else:
+            return Mat([int(op(x,y)) for x,y in zip(m,n)])
 
     def __gt__(self, m):
         return self.broadcast_op(m, gt, True)
@@ -373,7 +447,9 @@ class Mat:
     def __neg__(self):
         return Mat([-m for m in self.mat])
 
+
 #TODO: Make static mat funcs
+#TODO: range
 def zeros(*shape, **kwargs):
     return generate_mat(*shape, **kwargs)
 
