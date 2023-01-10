@@ -1,6 +1,7 @@
 from copy import deepcopy
 from operator import *
 from math import exp
+from functools import reduce
 
 """
 TODO: Implement list backed Mat object
@@ -14,10 +15,14 @@ class Mat:
     def __init__(self, firstElement, *args, **kwargs):
         if isinstance(firstElement, list):
             assert self.valid_matrix(firstElement), 'Invalid Matrix'
+            assert len(args) == 0, 'Setting using iterable'
             self.set_from_list(firstElement)
         else:
             assert self.valid_shape(firstElement, *args), 'Invalid Shape'
-            self.generate_mat(firstElement, *args, **kwargs)
+            M = zeros(firstElement, *args, **kwargs)
+            self.mat = M.mat
+            self.shape = M.shape
+            self.rank = M.rank
 
     def valid_matrix(self, m):
         #TODO: implement
@@ -83,16 +88,6 @@ class Mat:
             self.mat = m
             self.rank = 1
             self.shape = (len(m), )
-
-    def generate_mat(self, *shape, random=False, **kwargs):
-        #TODO: random
-        self.shape = shape
-        if len(shape) == 1:
-            self.mat = [0]*shape[0]
-            self.rank = 1
-        else:
-            self.mat = [Mat(*shape[1:])]*shape[0]
-            self.rank = self.mat[0].rank + 1
 
     def __getitem__(self, indices):
         if not isinstance(indices, tuple):
@@ -215,25 +210,56 @@ class Mat:
     def reshape(self, *shape):
         #TODO: add tests
         #TODO: check shape is valid
+        for s in shape:
+            #TODO assert s is int
+            #TODO assert only one wildcard (-1)
+            pass
+
+        current_power = reduce(mul, self.shape, 1)
+        new_power = reduce(mul, shape, 1)
+        assert new_power == current_power or (new_power < 0 and abs(new_power) <= current_power and current_power%new_power == 0)
+        if new_power < 0:
+            new_dim = current_power//abs(new_power)
+            shape = tuple(s if s>0 else new_dim for s in shape)
+
         ret = self.flatten().mat
-        # print(ret)
         temp = []
         for s in reversed(shape):
-            # print('s',s)
             for _ in range(len(ret)//s):
-                # print('',ret[:s])
                 temp += [Mat(ret[:s])]
                 ret = ret[s:]
-                # print('temp',temp)
-                # print('ret',ret)
             ret = temp
             temp = []
         return ret[0]
 
-    def transpose(self):
+    def transpose(self, axis=None):
+        if axis is None:
+            axis = list(range(self.rank))
+            if self.rank > 1:
+                axis[0], axis[-1] = axis[-1], axis[0]
+
+        assert set(axis) == set(range(self.rank))
+
+        shape_perm = tuple(self.shape[sidx] for sidx in axis)
+        ret = Mat(*shape_perm)
+
+        # TODO: see which way is slower
+        # def recursive_for(loop, block)
+        #     pass
+        
+        indices = [(slice(None),)]
+        temp = []
+        for s in self.shape[-2::-1]:
+            for t in indices:
+                temp += [(i,)+t for i in range(s)]
+            indices = temp
+            temp = []
+
+        for idx in indices:
+            ret.__setitem__(tuple(idx[sidx] for sidx in axis), self.__getitem__(idx))
+        return ret
         #TODO: add tests
-        #TODO: check valid
-        return Mat([self[:,i] for i in range(self.shape[1])])
+        # return mat([self[:,i] for i in range(self.shape[1])])
 
     def repeat(self, n):
         #TODO: add tests
@@ -347,3 +373,24 @@ class Mat:
     def __neg__(self):
         return Mat([-m for m in self.mat])
 
+#TODO: Make static mat funcs
+def zeros(*shape, **kwargs):
+    return generate_mat(*shape, **kwargs)
+
+def ones(*shape, **kwargs):
+    return generate_mat(*shape, **kwargs, num=1)
+
+def rand(*shape, **kwargs):
+    return generate_mat(*shape, **kwargs, random=True)
+
+def generate_mat(*shape, num=0, random=False, **kwargs):
+    #TODO: random
+    ret = Mat([0])
+    ret.shape = shape
+    if len(shape) == 1:
+        ret.mat = [num]*shape[0]
+        ret.rank = 1
+    else:
+        ret.mat = [generate_mat(*shape[1:], num=num, random=random, **kwargs) for _ in range(shape[0])]
+        ret.rank = ret.mat[0].rank + 1
+    return ret
